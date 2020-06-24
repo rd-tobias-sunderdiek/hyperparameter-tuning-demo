@@ -1,5 +1,5 @@
 install:
-	pip install -r requirements
+	pip install -r requirements.txt
 run:
 	python demo.py
 
