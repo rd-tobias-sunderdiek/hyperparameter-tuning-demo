@@ -15,7 +15,7 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 - see results in tensorboard via `make tensorboard`
 
 ###### TODO
-- configure all ddpg-hyperparameter and tune-training_iteration
+- train full example
 - use different algos/scheduler
 - make .gif of trained walker for readme
 - abort if reward 300 in last 100 episodes (via callback?)
