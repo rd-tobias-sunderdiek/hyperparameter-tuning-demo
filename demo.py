@@ -24,6 +24,8 @@ class RewardCallback(BaseCallback):
 class Trainable(tune.Trainable):
     def _setup(self, config):
         self.config = config
+        self.total_timesteps=4#400000
+        self.buffer_size = 50000
 
     def _train(self):
         # we got the DDPG-example from here: https://stable-baselines.readthedocs.io/en/master/modules/ddpg.html
@@ -32,8 +34,16 @@ class Trainable(tune.Trainable):
         n_actions = env.action_space.shape[-1]
         action_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=self.config['action_noise_sigma'] * np.ones(n_actions))
         reward_callback = RewardCallback()
-        model = DDPG(MlpPolicy, env, verbose=0, param_noise=param_noise, action_noise=action_noise)
-        model.learn(total_timesteps, callback=reward_callback)
+        model = DDPG(MlpPolicy,
+                     env,
+                     verbose=0,
+                     action_noise=action_noise,
+                     tau=self.config['tau'],
+                     batch_size=self.config['batch_size'],
+                     actor_lr=self.config['actor_learning_rate'],
+                     critic_lr=self.config['critic_learning_rate'],
+                     buffer_size=self.buffer_size)
+        model.learn(self.total_timesteps, callback=reward_callback)
         return {'mean_reward': reward_callback.mean_reward}
 
     def _save(self, tmp_checkpoint_dir):
@@ -45,14 +55,15 @@ class Trainable(tune.Trainable):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, "bipedal_walker_model")
         self.model = DDPG.load(checkpoint_path)
 
-#TODO configure parameter
-total_timesteps=4#400000
-param_noise = None
-
 analysis = tune.run(
     Trainable,
     stop={"training_iteration": 20},
-    config={"action_noise_sigma": tune.grid_search([float(0.5), float(0.9)])},
+    config={"action_noise_sigma": tune.grid_search([float(0.5), float(0.9)]),
+            "tau": tune.grid_search([float(0.001), float(0.003)]),
+            "batch_size": tune.grid_search([64, 128, 256]),
+            "actor_learning_rate": tune.grid_search([float(0.0001), float(0.0003)]),
+            "critic_learning_rate": tune.grid_search([float(0.001), float(0.01)])
+            },
     local_dir='./ray_results/'
 )
 

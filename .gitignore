@@ -3,3 +3,4 @@ demo-venv/
 .idea/
 *.iml
 venv/
+.DS_Store
