@@ -8,6 +8,8 @@ from stable_baselines.common.noise import NormalActionNoise, OrnsteinUhlenbeckAc
 from stable_baselines import DDPG
 from stable_baselines.common.callbacks import BaseCallback
 
+MODEL_FILENAME = "bipedal_walker_model"
+
 # for callbacks see: https://stable-baselines.readthedocs.io/en/master/guide/callbacks.html
 class RewardCallback(BaseCallback):
     def __init__(self, verbose=0):
@@ -44,20 +46,21 @@ class Trainable(tune.Trainable):
                      critic_lr=self.config['critic_learning_rate'],
                      buffer_size=self.buffer_size)
         model.learn(self.total_timesteps, callback=reward_callback)
+        model.save(MODEL_FILENAME)
         return {'mean_reward': reward_callback.mean_reward}
 
     def _save(self, tmp_checkpoint_dir):
-        checkpoint_path = os.path.join(tmp_checkpoint_dir, "bipedal_walker_model")
+        checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
         self.model.save(checkpoint_path)
         return tmp_checkpoint_dir
 
     def _restore(self, tmp_checkpoint_dir):
-        checkpoint_path = os.path.join(tmp_checkpoint_dir, "bipedal_walker_model")
+        checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
         self.model = DDPG.load(checkpoint_path)
 
 analysis = tune.run(
     Trainable,
-    stop={"training_iteration": 20},
+    stop={"training_iteration": 2},
     config={"action_noise_sigma": tune.grid_search([float(0.5), float(0.9)]),
             "tau": tune.grid_search([float(0.001), float(0.003)]),
             "batch_size": tune.grid_search([64, 128, 256]),
@@ -68,3 +71,14 @@ analysis = tune.run(
 )
 
 print("Best hyperparameter {}".format(analysis.get_best_config(metric="mean_reward", mode="max")))
+best_model_path = analysis.get_best_logdir(metric="mean_reward", mode="max")
+print("Best model stored in {}".format(best_model_path))
+best_model = DDPG.load(best_model_path + '/' + MODEL_FILENAME)
+
+# we got this part from https://stable-baselines.readthedocs.io/en/master/guide/examples.html
+env = gym.make('BipedalWalker-v3')
+obs = env.reset()
+for i in range(1000):
+    action, _states = best_model.predict(obs)
+    obs, rewards, dones, info = env.step(action)
+    env.render()
