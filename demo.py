@@ -1,12 +1,15 @@
 import gym
 import numpy as np
 import os
+import imageio
 
 from ray import tune
 from stable_baselines.ddpg.policies import MlpPolicy
 from stable_baselines.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise, AdaptiveParamNoiseSpec
 from stable_baselines import DDPG
 from stable_baselines.common.callbacks import BaseCallback
+from pygifsicle import optimize
+
 
 MODEL_FILENAME = "bipedal_walker_model"
 
@@ -26,7 +29,7 @@ class RewardCallback(BaseCallback):
 class Trainable(tune.Trainable):
     def _setup(self, config):
         self.config = config
-        self.total_timesteps=4#400000
+        self.total_timesteps=10#00000
         self.buffer_size = 50000
 
     def _train(self):
@@ -61,11 +64,11 @@ class Trainable(tune.Trainable):
 analysis = tune.run(
     Trainable,
     stop={"training_iteration": 2},
-    config={"action_noise_sigma": tune.grid_search([float(0.5), float(0.9)]),
-            "tau": tune.grid_search([float(0.001), float(0.003)]),
-            "batch_size": tune.grid_search([64, 128, 256]),
-            "actor_learning_rate": tune.grid_search([float(0.0001), float(0.0003)]),
-            "critic_learning_rate": tune.grid_search([float(0.001), float(0.01)])
+    config={"action_noise_sigma": tune.grid_search([float(0.5)]),
+            "tau": tune.grid_search([float(0.001)]),
+            "batch_size": tune.grid_search([256]),
+            "actor_learning_rate": tune.grid_search([float(0.000527)]),
+            "critic_learning_rate": tune.grid_search([float(0.001)])
             },
     local_dir='./ray_results/'
 )
@@ -77,8 +80,14 @@ best_model = DDPG.load(best_model_path + '/' + MODEL_FILENAME)
 
 # we got this part from https://stable-baselines.readthedocs.io/en/master/guide/examples.html
 env = gym.make('BipedalWalker-v3')
+images = []
 obs = env.reset()
-for i in range(1000):
-    action, _states = best_model.predict(obs)
-    obs, rewards, dones, info = env.step(action)
-    env.render()
+img = env.render(mode='rgb_array')
+for i in range(350):
+    images.append(img)
+    action, _ = best_model.predict(obs)
+    obs, _, _ ,_ = env.step(action)
+    img = env.render(mode='rgb_array')
+
+imageio.mimsave('best_model.gif', [np.array(img) for i, img in enumerate(images) if i%2 == 0], fps=29)
+optimize('best_model.gif')

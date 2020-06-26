@@ -2,6 +2,7 @@
 
 This is a demo for hyperparameter-tuning with Tune[1] using an DDPG example from stable-baselines[2] for the OpenAI-Gym environment[3] `BipedalWalker`[4]. 
 
+![](best_model.gif)
 ##### Goal
 Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 
