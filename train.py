@@ -74,9 +74,9 @@ def main():
     hyperopt_search = HyperOptSearch(space, metric="mean_reward", mode="max")
     analysis = tune.run(
         Trainable,
-        stop={"training_iteration": 1},
-        num_samples = 30,
-        #scheduler=ASHAScheduler(metric="mean_reward", mode="max"),
+        stop={"training_iteration": 2},
+        num_samples = 100,
+        scheduler=ASHAScheduler(metric="mean_reward", mode="max"),
         search_alg=hyperopt_search,
         local_dir='./ray_results/'
     )
