@@ -19,10 +19,8 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 ###### TODO
 - train full example
 - use different algos/scheduler
-- make .gif of trained walker for readme smaller
 - abort if reward 300 in last 100 episodes (via callback?)
 - is there a more elegant way to get the mean reward instead of my version with RewardCallback?
-- demonstrate distributed hyperparameter search
 
 [1] https://docs.ray.io/en/latest/tune.html
 
