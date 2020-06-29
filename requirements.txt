@@ -7,3 +7,4 @@ requests
 gym
 imageio
 pygifsicle
+hyperopt

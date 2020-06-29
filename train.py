@@ -3,6 +3,9 @@ import numpy as np
 import os
 
 from ray import tune
+from ray.tune.schedulers import ASHAScheduler
+from hyperopt import hp
+from ray.tune.suggest.hyperopt import HyperOptSearch
 from stable_baselines.ddpg.policies import MlpPolicy
 from stable_baselines.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines import DDPG
@@ -27,7 +30,7 @@ class RewardCallback(BaseCallback):
 class Trainable(tune.Trainable):
     def _setup(self, config):
         self.config = config
-        self.total_timesteps=1#00000
+        self.total_timesteps=100000
         self.buffer_size = 50000
 
     def _train(self):
@@ -59,16 +62,22 @@ class Trainable(tune.Trainable):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
         self.model = DDPG.load(checkpoint_path)
 
+# we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
+    space={"action_noise_sigma": hp.uniform("action_noise_sigma", 0.4, 0.7),
+            "tau": hp.uniform("tau", 0.001, 0.002),
+            "batch_size": hp.choice("batch_size", [64, 128, 256, 512]),
+            "actor_learning_rate": hp.loguniform("actor_learning_rate", 0.000527, 0.1),
+            "critic_learning_rate": hp.loguniform("critic_learning_rate", 0.001, 0.1)
+            }
+
+    hyperopt_search = HyperOptSearch(space, metric="mean_reward", mode="max")
     analysis = tune.run(
         Trainable,
         stop={"training_iteration": 1},
-        config={"action_noise_sigma": tune.grid_search([float(0.5)]),
-                "tau": tune.grid_search([float(0.001)]),
-                "batch_size": tune.grid_search([256]),
-                "actor_learning_rate": tune.grid_search([float(0.000527)]),
-                "critic_learning_rate": tune.grid_search([float(0.001)])
-                },
+        num_samples = 30,
+        #scheduler=ASHAScheduler(metric="mean_reward", mode="max"),
+        search_alg=hyperopt_search,
         local_dir='./ray_results/'
     )
     print("Best hyperparameter {}".format(analysis.get_best_config(metric="mean_reward", mode="max")))
