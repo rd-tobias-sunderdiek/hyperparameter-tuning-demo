@@ -4,3 +4,5 @@ demo-venv/
 *.iml
 venv/
 .DS_Store
+best_model_saved_in_path.txt
+best_model.gif

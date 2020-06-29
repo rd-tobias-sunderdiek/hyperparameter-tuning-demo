@@ -1,17 +1,15 @@
 import gym
 import numpy as np
 import os
-import imageio
 
 from ray import tune
 from stable_baselines.ddpg.policies import MlpPolicy
-from stable_baselines.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise, AdaptiveParamNoiseSpec
+from stable_baselines.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines import DDPG
 from stable_baselines.common.callbacks import BaseCallback
-from pygifsicle import optimize
-
 
 MODEL_FILENAME = "bipedal_walker_model"
+MODEL_SAVED_IN_PATH_TXT = 'best_model_saved_in_path.txt'
 
 # for callbacks see: https://stable-baselines.readthedocs.io/en/master/guide/callbacks.html
 class RewardCallback(BaseCallback):
@@ -29,7 +27,7 @@ class RewardCallback(BaseCallback):
 class Trainable(tune.Trainable):
     def _setup(self, config):
         self.config = config
-        self.total_timesteps=10#00000
+        self.total_timesteps=1#00000
         self.buffer_size = 50000
 
     def _train(self):
@@ -61,33 +59,23 @@ class Trainable(tune.Trainable):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
         self.model = DDPG.load(checkpoint_path)
 
-analysis = tune.run(
-    Trainable,
-    stop={"training_iteration": 2},
-    config={"action_noise_sigma": tune.grid_search([float(0.5)]),
-            "tau": tune.grid_search([float(0.001)]),
-            "batch_size": tune.grid_search([256]),
-            "actor_learning_rate": tune.grid_search([float(0.000527)]),
-            "critic_learning_rate": tune.grid_search([float(0.001)])
-            },
-    local_dir='./ray_results/'
-)
+def main():
+    analysis = tune.run(
+        Trainable,
+        stop={"training_iteration": 1},
+        config={"action_noise_sigma": tune.grid_search([float(0.5)]),
+                "tau": tune.grid_search([float(0.001)]),
+                "batch_size": tune.grid_search([256]),
+                "actor_learning_rate": tune.grid_search([float(0.000527)]),
+                "critic_learning_rate": tune.grid_search([float(0.001)])
+                },
+        local_dir='./ray_results/'
+    )
+    print("Best hyperparameter {}".format(analysis.get_best_config(metric="mean_reward", mode="max")))
+    best_model_path = analysis.get_best_logdir(metric="mean_reward", mode="max")
+    print("Best model stored in {}".format(best_model_path))
+    with open(MODEL_SAVED_IN_PATH_TXT, 'w') as file:
+        file.write(best_model_path)
 
-print("Best hyperparameter {}".format(analysis.get_best_config(metric="mean_reward", mode="max")))
-best_model_path = analysis.get_best_logdir(metric="mean_reward", mode="max")
-print("Best model stored in {}".format(best_model_path))
-best_model = DDPG.load(best_model_path + '/' + MODEL_FILENAME)
-
-# we got this part from https://stable-baselines.readthedocs.io/en/master/guide/examples.html
-env = gym.make('BipedalWalker-v3')
-images = []
-obs = env.reset()
-img = env.render(mode='rgb_array')
-for i in range(350):
-    images.append(img)
-    action, _ = best_model.predict(obs)
-    obs, _, _ ,_ = env.step(action)
-    img = env.render(mode='rgb_array')
-
-imageio.mimsave('best_model.gif', [np.array(img) for i, img in enumerate(images) if i%2 == 0], fps=29)
-optimize('best_model.gif')
+if __name__ == "__main__":
+    main()

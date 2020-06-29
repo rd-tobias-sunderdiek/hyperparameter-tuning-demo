@@ -2,7 +2,7 @@
 
 This is a demo for hyperparameter-tuning with Tune[1] using an DDPG example from stable-baselines[2] for the OpenAI-Gym environment[3] `BipedalWalker`[4]. 
 
-![](best_model.gif)
+![](assets/best_model.gif)
 ##### Goal
 Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 
@@ -12,8 +12,9 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 
 #### Usage
 - [optional] configure hyperparameter in `demo.py`
-- `make run` starts training
+- `make train` starts training
 - see results in tensorboard via `make tensorboard`
+- after training finished, `make gif` creates a .gif of the best model
 
 ###### TODO
 - train full example

@@ -1,7 +1,10 @@
 install:
 	pip install -r requirements.txt
-run:
-	python demo.py
+train:
+	python train.py
 
 tensorboard:
 	tensorboard --logdir=ray_results/
+
+gif:
+	python create_gif.py
