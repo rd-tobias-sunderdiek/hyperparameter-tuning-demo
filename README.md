@@ -11,7 +11,7 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 - second `make install`
 
 #### Usage
-- [optional] configure hyperparameter in `demo.py`
+- [optional] configure hyperparameter in `train.py`
 - `make train` starts training
 - see results in tensorboard via `make tensorboard`
 - after training finished, `make gif` creates a .gif of the best model
