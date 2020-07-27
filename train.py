@@ -40,7 +40,7 @@ def main():
     analysis = tune.run(
         Trainable,
         stop={"training_iteration": 1},
-        num_samples = 1,
+        num_samples = 2,
         scheduler=ASHAScheduler(metric="mean_reward", mode="max"),
         search_alg=hyperopt_search,
         local_dir='./ray_results/'

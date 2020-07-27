@@ -19,14 +19,9 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 - see results in tensorboard via `make tensorboard`
 - after training finished, `make gif` creates a .gif of the best model
 
-#### Shipped with example weights and training results
-
-- `make tensorboard_demo` shows training results of 50 trails in tensorboard including best weights in folder `Trainable_24`
-
 ###### TODO
 - use different scheduler without redis
 - describe goal and rewards in readme
-- lost info of mean_reward in tensorboard demo
 
 [1] https://docs.ray.io/en/latest/tune.html
 
