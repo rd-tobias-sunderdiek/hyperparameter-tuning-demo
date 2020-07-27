@@ -6,8 +6,6 @@ This demo is meant to be able to be trained on cpu locally.
 
 ![best model](assets/best_model.gif)
 
-![50 trials](assets/50_trials.png)
-
 ##### Goal
 Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 
