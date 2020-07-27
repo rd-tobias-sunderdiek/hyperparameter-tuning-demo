@@ -1,0 +1,2 @@
+mean_reward,done,timesteps_total,episodes_total,training_iteration,experiment_id,date,timestamp,time_this_iter_s,time_total_s,pid,hostname,node_ip,time_since_restore,timesteps_since_restore,iterations_since_restore,trial_id,experiment_tag
+36.719815334375674,True,,,1,c48c7657727c44709446b0644482b3a9,2020-07-27_13-12-55,1595848375,219.22625994682312,219.22625994682312,76473,digital0295,192.168.1.126,219.22625994682312,0,1,99f30cd8,"1_action_noise_sigma=0.4,actor_learning_rate=0.0001,batch_size=128,critic_learning_rate=0.0001,tau=0.005"

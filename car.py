@@ -9,7 +9,7 @@ from stable_baselines.common.callbacks import BaseCallback
 class Car:
     def __init__(self, model_filename):
         self.model_filename = model_filename
-        self.total_timesteps=400_000
+        self.total_timesteps=200_000
         self.buffer_size = 50_000
 
     def train(self, hyperparameter):

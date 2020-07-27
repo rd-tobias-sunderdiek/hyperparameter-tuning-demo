@@ -1,0 +1,216 @@
+{
+  "checkpoints": [
+    {
+      "trainable_name": "Trainable",
+      "trial_id": "6113f780",
+      "config": {
+        "action_noise_sigma": 0.4,
+        "actor_learning_rate": 0.0001,
+        "batch_size": 128,
+        "critic_learning_rate": 0.0001,
+        "tau": 0.005
+      },
+      "local_dir": "/Users/tobias.sunderdiek/ri/vortrag_tune/ray_results/Trainable",
+      "evaluated_params": {
+        "action_noise_sigma": 0.4,
+        "actor_learning_rate": 0.0001,
+        "batch_size": 128,
+        "critic_learning_rate": 0.0001,
+        "tau": 0.005
+      },
+      "experiment_tag": "1_action_noise_sigma=0.4,actor_learning_rate=0.0001,batch_size=128,critic_learning_rate=0.0001,tau=0.005",
+      "location": {
+        "_type": "CLOUDPICKLE_FALLBACK",
+        "value": "8004954b000000000000008c0e7261792e74756e652e747269616c948c084c6f636174696f6e9493942981947d94288c08686f73746e616d65948c0d3139322e3136382e312e313236948c03706964944d2bb675622e"
+      },
+      "resources": {
+        "cpu": 1,
+        "gpu": 0,
+        "memory": 0,
+        "object_store_memory": 0,
+        "extra_cpu": 0,
+        "extra_gpu": 0,
+        "extra_memory": 0,
+        "extra_object_store_memory": 0,
+        "custom_resources": {},
+        "extra_custom_resources": {}
+      },
+      "stopping_criterion": {
+        "training_iteration": 1
+      },
+      "loggers": "80044e2e",
+      "sync_to_driver_fn": "80044e2e",
+      "verbose": true,
+      "max_failures": 0,
+      "last_result": {
+        "mean_reward": -Infinity,
+        "done": true,
+        "timesteps_total": null,
+        "episodes_total": null,
+        "training_iteration": 1,
+        "experiment_id": "6aded1e7a42340f28f1b5148285a3cf5",
+        "date": "2020-07-27_12-19-04",
+        "timestamp": 1595845144,
+        "time_this_iter_s": 88.64978098869324,
+        "time_total_s": 88.64978098869324,
+        "pid": 46635,
+        "hostname": "digital0295",
+        "node_ip": "192.168.1.126",
+        "config": {
+          "action_noise_sigma": 0.4,
+          "actor_learning_rate": 0.0001,
+          "batch_size": 128,
+          "critic_learning_rate": 0.0001,
+          "tau": 0.005
+        },
+        "time_since_restore": 88.64978098869324,
+        "timesteps_since_restore": 0,
+        "iterations_since_restore": 1,
+        "trial_id": "6113f780",
+        "experiment_tag": "1_action_noise_sigma=0.4,actor_learning_rate=0.0001,batch_size=128,critic_learning_rate=0.0001,tau=0.005"
+      },
+      "last_update_time": 1595845144.7614238,
+      "metric_analysis": {
+        "mean_reward": {
+          "max": -Infinity,
+          "min": -Infinity,
+          "last": -Infinity
+        },
+        "done": {
+          "max": true,
+          "min": true,
+          "last": true
+        },
+        "training_iteration": {
+          "max": 1,
+          "min": 1,
+          "last": 1
+        },
+        "timestamp": {
+          "max": 1595845144,
+          "min": 1595845144,
+          "last": 1595845144
+        },
+        "time_this_iter_s": {
+          "max": 88.64978098869324,
+          "min": 88.64978098869324,
+          "last": 88.64978098869324
+        },
+        "time_total_s": {
+          "max": 88.64978098869324,
+          "min": 88.64978098869324,
+          "last": 88.64978098869324
+        },
+        "pid": {
+          "max": 46635,
+          "min": 46635,
+          "last": 46635
+        },
+        "time_since_restore": {
+          "max": 88.64978098869324,
+          "min": 88.64978098869324,
+          "last": 88.64978098869324
+        },
+        "timesteps_since_restore": {
+          "max": 0,
+          "min": 0,
+          "last": 0
+        },
+        "iterations_since_restore": {
+          "max": 1,
+          "min": 1,
+          "last": 1
+        },
+        "config/action_noise_sigma": {
+          "max": 0.4,
+          "min": 0.4,
+          "last": 0.4
+        },
+        "config/actor_learning_rate": {
+          "max": 0.0001,
+          "min": 0.0001,
+          "last": 0.0001
+        },
+        "config/batch_size": {
+          "max": 128,
+          "min": 128,
+          "last": 128
+        },
+        "config/critic_learning_rate": {
+          "max": 0.0001,
+          "min": 0.0001,
+          "last": 0.0001
+        },
+        "config/tau": {
+          "max": 0.005,
+          "min": 0.005,
+          "last": 0.005
+        }
+      },
+      "export_formats": [],
+      "status": "TERMINATED",
+      "start_time": 1595845050.663897,
+      "logdir": "/Users/tobias.sunderdiek/ri/vortrag_tune/ray_results/Trainable/Trainable_1_action_noise_sigma=0.4,actor_learning_rate=0.0001,batch_size=128,critic_learning_rate=0.0001,tau=0.005_2020-07-27_12-17-304kgbzfwe",
+      "runner": null,
+      "result_logger": null,
+      "last_debug": 1595845144.7614179,
+      "error_file": null,
+      "error_msg": null,
+      "custom_trial_name": null,
+      "saving_to": null,
+      "remote_checkpoint_dir_prefix": null,
+      "checkpoint_freq": 0,
+      "checkpoint_at_end": false,
+      "sync_on_checkpoint": true,
+      "checkpoint_manager": {
+        "_type": "CLOUDPICKLE_FALLBACK",
+        "value": "80049565010000000000008c1b7261792e74756e652e636865636b706f696e745f6d616e61676572948c11436865636b706f696e744d616e616765729493942981947d94288c146b6565705f636865636b706f696e74735f6e756d94477ff00000000000008c165f636865636b706f696e745f73636f72655f6465736394898c165f636865636b706f696e745f73636f72655f61747472948c12747261696e696e675f697465726174696f6e948c1c6e65776573745f70657273697374656e745f636865636b706f696e749468008c0a436865636b706f696e749493942981947d94288c0773746f72616765948c0a70657273697374656e74948c0576616c7565944e8c06726573756c74947d9475628c186e65776573745f6d656d6f72795f636865636b706f696e7494680b2981947d9428680e8c066d656d6f72799468104e68117d9475628c115f626573745f636865636b706f696e7473945d948c0b5f6d656d62657273686970948f9475622e"
+      },
+      "restore_path": null,
+      "restoring_from": null,
+      "num_failures": 0,
+      "results": "80044e2e",
+      "best_result": "80044e2e",
+      "param_config": "80044e2e",
+      "extra_arg": "80044e2e",
+      "_nonjson_fields": [
+        "loggers",
+        "sync_to_driver_fn",
+        "results",
+        "best_result",
+        "param_config",
+        "extra_arg"
+      ],
+      "resuming_from": null,
+      "__logger_started__": false
+    }
+  ],
+  "runner_data": {
+    "_global_time_limit": Infinity,
+    "_total_time": 88.64978098869324,
+    "_iteration": 2,
+    "_has_errored": false,
+    "_fail_fast": false,
+    "_verbose": true,
+    "_server_port": 4321,
+    "_cached_trial_decisions": {},
+    "_should_stop_experiment": false,
+    "_local_checkpoint_dir": "/Users/tobias.sunderdiek/ri/vortrag_tune/ray_results/Trainable",
+    "_remote_checkpoint_dir": null,
+    "_stopper": {
+      "_type": "CLOUDPICKLE_FALLBACK",
+      "value": "80049527000000000000008c107261792e74756e652e73746f70706572948c0b4e6f6f7053746f707065729493942981942e"
+    },
+    "_resumed": false,
+    "_start_time": 1595845050.592863,
+    "_last_checkpoint_time": 1595845144.7758698,
+    "_checkpoint_period": 10,
+    "_session_str": "2020-07-27_12-17-30",
+    "checkpoint_file": "/Users/tobias.sunderdiek/ri/vortrag_tune/ray_results/Trainable/experiment_state-2020-07-27_12-17-30.json",
+    "launch_web_server": false
+  },
+  "stats": {
+    "start_time": 1595845050.592863,
+    "timestamp": 1595845144.7758698
+  }
+}

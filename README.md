@@ -21,9 +21,7 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 
 #### Shipped with example weights and training results
 
-- `ray_results/` contains training results of 50 trails (trained with ASHAScheduler, you need redis for this)
-- `make tensorboard` on unmodified `ray_results` folder opens this results
-- `best_model_saved_in_path.txt` points to folder with best result and weights
+- `make tensorboard_demo` shows training results of 50 trails in tensorboard including best weights in folder `Trainable_24`
 
 ###### TODO
 - use different algos/scheduler
@@ -32,6 +30,7 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 - describe goal and rewards in readme
 - compress size of created gif and image size to 300x200
 - cleanup weights from ray_result and commit
+- lost info of mean_reward in tensorboard demo
 
 [1] https://docs.ray.io/en/latest/tune.html
 
