@@ -15,11 +15,11 @@ def main():
             best_model = DDPG.load(best_model_path + '/' + MODEL_FILENAME)
 
             # we got this part from https://stable-baselines.readthedocs.io/en/master/guide/examples.html
-            env = gym.make('BipedalWalker-v3')
+            env = gym.make('MountainCarContinuous-v0')
             images = []
             obs = env.reset()
             img = env.render(mode='rgb_array')
-            for i in range(350):
+            for i in range(75):
                 images.append(img)
                 action, _ = best_model.predict(obs)
                 obs, _, _ ,_ = env.step(action)

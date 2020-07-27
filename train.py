@@ -11,34 +11,33 @@ from stable_baselines.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines import DDPG
 from stable_baselines.common.callbacks import BaseCallback
 
-MODEL_FILENAME = "bipedal_walker_model"
+MODEL_FILENAME = "saved_model"
 MODEL_SAVED_IN_PATH_TXT = 'best_model_saved_in_path.txt'
 
 # for callbacks see: https://stable-baselines.readthedocs.io/en/master/guide/callbacks.html
 class RewardCallback(BaseCallback):
     def __init__(self, verbose=0):
         super(RewardCallback, self).__init__(verbose)
-        self.mean_reward = 0
+        self.mean_reward = -np.Inf
 
-    def _on_training_end(self) -> None:
-        eval_episode_rewards = self.locals['eval_episode_rewards']
-        self.mean_reward = np.mean(eval_episode_rewards)
-
-    def mean_reward(self):
-        return self.mean_reward
+    def _on_step(self) -> bool:
+        if(len(self.locals['episode_rewards_history']) == 100):
+            reward_over_last_100 = np.mean(self.locals['episode_rewards_history'])
+            self.mean_reward = reward_over_last_100
+        return True
 
 class Trainable(tune.Trainable):
     def _setup(self, config):
         self.config = config
-        self.total_timesteps=100000
-        self.buffer_size = 50000
+        self.total_timesteps=400_000
+        self.buffer_size = 50_000
 
     def _train(self):
         # we got the DDPG-example from here: https://stable-baselines.readthedocs.io/en/master/modules/ddpg.html
-        # but used BipdedalWalker instead MountainCarContinuous in our demo
-        env = gym.make('BipedalWalker-v3')
+        env = gym.make('MountainCarContinuous-v0')
         n_actions = env.action_space.shape[-1]
         action_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=self.config['action_noise_sigma'] * np.ones(n_actions))
+        # we got the callback example from here: https://stable-baselines.readthedocs.io/en/master/guide/callbacks.html
         reward_callback = RewardCallback()
         model = DDPG(MlpPolicy,
                      env,
@@ -64,18 +63,18 @@ class Trainable(tune.Trainable):
 
 # we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
-    space={"action_noise_sigma": hp.uniform("action_noise_sigma", 0.4, 0.7),
-            "tau": hp.uniform("tau", 0.001, 0.002),
+    space={"action_noise_sigma": hp.uniform("action_noise_sigma", 0.2, 0.7),
+            "tau": hp.uniform("tau", 0.001, 0.01),
             "batch_size": hp.choice("batch_size", [64, 128, 256, 512]),
-            "actor_learning_rate": hp.loguniform("actor_learning_rate", 0.000527, 0.1),
-            "critic_learning_rate": hp.loguniform("critic_learning_rate", 0.001, 0.1)
+            "actor_learning_rate": hp.choice("actor_learning_rate", [1e-1, 1e-2, 1e-3, 1e-4]),
+            "critic_learning_rate": hp.choice("critic_learning_rate", [1e-1, 1e-2, 1e-3, 1e-4])
             }
 
     hyperopt_search = HyperOptSearch(space, metric="mean_reward", mode="max")
     analysis = tune.run(
         Trainable,
-        stop={"training_iteration": 2},
-        num_samples = 100,
+        stop={"training_iteration": 1},
+        num_samples = 50,
         scheduler=ASHAScheduler(metric="mean_reward", mode="max"),
         search_alg=hyperopt_search,
         local_dir='./ray_results/'
