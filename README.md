@@ -24,12 +24,8 @@ Optimize mean reward of last 100 episodes (`np.mean(eval_episode_rewards)`)
 - `make tensorboard_demo` shows training results of 50 trails in tensorboard including best weights in folder `Trainable_24`
 
 ###### TODO
-- use different algos/scheduler
-- is there a more elegant way to get the mean reward instead of my version with RewardCallback?
-- configure example with redis as prerequisite
+- use different scheduler without redis
 - describe goal and rewards in readme
-- compress size of created gif and image size to 300x200
-- cleanup weights from ray_result and commit
 - lost info of mean_reward in tensorboard demo
 
 [1] https://docs.ray.io/en/latest/tune.html
