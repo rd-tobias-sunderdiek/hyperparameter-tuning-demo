@@ -5,17 +5,17 @@ from ray.tune.schedulers import ASHAScheduler
 from hyperopt import hp
 from ray.tune.suggest.hyperopt import HyperOptSearch
 
-from car import Car
+from some_model_to_train import SomeModelToTrain
 
 MODEL_FILENAME = "saved_model"
 MODEL_SAVED_IN_PATH_TXT = 'best_model_saved_in_path.txt'
 
 class Trainable(tune.Trainable):
     def _setup(self, hyperparameter):
-        self.hyperparameter = hyperparameter
+        self.model = SomeModelToTrain(hyperparameter, MODEL_FILENAME)
 
     def _train(self):
-        mean_reward = Car(MODEL_FILENAME).train(self.hyperparameter)
+        mean_reward = self.model.train()
         return {'mean_reward': mean_reward}
 
     def _save(self, tmp_checkpoint_dir):
@@ -25,7 +25,7 @@ class Trainable(tune.Trainable):
 
     def _restore(self, tmp_checkpoint_dir):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
-        self.model = Car(MODEL_FILENAME).load(checkpoint_path)
+        self.model = self.model.load(checkpoint_path)
 
 # we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
@@ -40,11 +40,12 @@ def main():
     hyperopt_search = HyperOptSearch(space, metric="mean_reward", mode="max")
     analysis = tune.run(
         Trainable,
-        stop={"training_iteration": 1},
+        stop={"training_iteration": 200_000},
         num_samples = 10,
         scheduler=ASHAScheduler(metric="mean_reward", mode="max"),
         search_alg=hyperopt_search,
-        local_dir='./ray_results/'
+        local_dir='./ray_results/',
+        checkpoint_at_end=True
     )
     print("Best hyperparameter {}".format(analysis.get_best_config(metric="mean_reward", mode="max")))
     best_model_path = analysis.get_best_logdir(metric="mean_reward", mode="max")
