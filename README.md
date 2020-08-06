@@ -1,6 +1,6 @@
 ### Hyperparametertuning Demo
 
-This is a demo for hyperparameter-tuning with Tune[1] using an DDPG example from stable-baselines[2] for the OpenAI-Gym environment[3] `MountainCarContinuous`[4].
+This is a demo for hyperparameter-tuning with Tune[1] using an DQN example from PyTorch[2] for the OpenAI-Gym environment[3] `MountainCarContinuous`[4].
 
 This demo is meant to be able to be trained on cpu locally (took ~25 min. on a 2.5 GHz Quad-Core i7)
 
@@ -10,8 +10,7 @@ This demo is meant to be able to be trained on cpu locally (took ~25 min. on a 2
 Drive car up the hill and get reward for reaching towards the top. Max. reward is 100 (minus used energy) if climbed on top of the hill. In this example, we use the metric `mean_reward` for this.
 
 #### Install
-- first install OpenMPI as described in[5] (not necessary if you plan to use this repo within google colab)
-- second `make install`
+- `make install` (tested with python 3.8)
 
 #### Usage
 - [optional] configure hyperparameter in `train.py`
@@ -19,9 +18,16 @@ Drive car up the hill and get reward for reaching towards the top. Max. reward i
 - see results in tensorboard via `make tensorboard`
 - after training finished, `make gif` creates a .gif of the best model
 
+#### TODO
+- hyperparams extract
+- add learning rate as hyperparameter
+- change pole to mountain car
+- add tensorboard writer
+- save best model failed to save silently?
+
 [1] https://docs.ray.io/en/latest/tune.html
 
-[2] https://stable-baselines.readthedocs.io/en/master/modules/ddpg.html
+[2] https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
 [3] https://gym.openai.com/
 

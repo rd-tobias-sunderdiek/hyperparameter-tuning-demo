@@ -8,3 +8,4 @@ best_model_saved_in_path.txt
 best_model.gif
 __pycache__/
 *.code-workspace
+.vscode/

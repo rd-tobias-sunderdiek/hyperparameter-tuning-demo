@@ -1,8 +1,7 @@
-stable-baselines[mpi]
-tensorflow==1.15.2
-Box2d
-numpy==1.16.4
-ray[tune]==0.8.5
+numpy
+torch
+torchvision
+ray[tune]==0.8.6
 requests
 gym
 imageio
