@@ -1,7 +1,7 @@
 import os
 
 from ray import tune
-from ray.tune.schedulers import ASHAScheduler
+from ray.tune.schedulers import MedianStoppingRule
 from hyperopt import hp
 from ray.tune.suggest.hyperopt import HyperOptSearch
 from ray.tune import CLIReporter
@@ -16,7 +16,7 @@ reporter.add_metric_column("loss") # todo necessary?
 
 class Trainable(tune.Trainable):
     def _setup(self, hyperparameter):
-        self.model = SomeModelToTrain()
+        self.model = SomeModelToTrain(hyperparameter)
 
     def _train(self):
         loss = self.model.train_one_episode(self.training_iteration)
@@ -34,16 +34,17 @@ class Trainable(tune.Trainable):
 # we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
     space= {
-            "batch_size": hp.choice("batch_size", [128]),
-            "learning_rate": hp.choice("learning_rate", [0.01]),
-            "target_update": hp.choice("target_update", [10]),
+            "batch_size": hp.choice("batch_size", [64, 128, 256]),
+            "learning_rate": hp.choice("learning_rate", [0.01, 0.001, 0.0001]),
+            "target_update": hp.choice("target_update", [10, 100]),
             }
 
     hyperopt_search = HyperOptSearch(space, metric="loss", mode="min")
     analysis = tune.run(
         Trainable,
-        num_samples = 2,
-        scheduler=ASHAScheduler(metric="loss", mode="min", max_t=200),
+        stop= {'training_iteration': 100},
+        num_samples = 10,
+        scheduler=MedianStoppingRule(metric="loss", mode="min"),
         search_alg=hyperopt_search,
         local_dir='./ray_results/',
         progress_reporter=reporter,

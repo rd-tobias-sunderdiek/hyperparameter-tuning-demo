@@ -19,8 +19,7 @@ Drive car up the hill and get reward for reaching towards the top. Max. reward i
 - after training finished, `make gif` creates a .gif of the best model
 
 #### TODO
-- hyperparams extract
-- add learning rate as hyperparameter
+- restore not working
 - change pole to mountain car
 - add tensorboard writer
 - save best model failed to save silently?

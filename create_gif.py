@@ -14,7 +14,7 @@ def main():
         with open(MODEL_SAVED_IN_PATH_TXT, 'r') as file:
             best_model_path = file.readlines()[0]
             print("Best model found in {}, start rendering .gif".format(best_model_path))
-            best_model = SomeModelToTrain()
+            best_model = SomeModelToTrain({'learning_rate': 1.0, 'batch_size': 1, 'target_update': 1})
             best_model.load(best_model_path + '/' + MODEL_FILENAME)
 
             # we got this part from https://stable-baselines.readthedocs.io/en/master/guide/examples.html and modified it
