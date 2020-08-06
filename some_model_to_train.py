@@ -9,7 +9,7 @@ from stable_baselines.common.callbacks import BaseCallback
 class SomeModelToTrain:
     def __init__(self, hyperparameter, model_filename):
         self.model_filename = model_filename
-        self.total_timesteps=1 # controlled through tune in max_timesteps
+        self.total_timesteps=200
         buffer_size = 50_000
         # we got the DDPG-example from here: https://stable-baselines.readthedocs.io/en/master/modules/ddpg.html
         env = gym.make('MountainCarContinuous-v0')
@@ -28,8 +28,8 @@ class SomeModelToTrain:
                      buffer_size=buffer_size)
 
     def train(self):
-        self.model.learn(self.total_timesteps, callback=self.reward_callback, reset_num_timesteps=False)
-        return self.reward_callback.mean_reward
+        self.model = self.model.learn(self.total_timesteps, callback=self.reward_callback, reset_num_timesteps=False)
+        return {'mean_reward': self.reward_callback.mean_reward, 'episode_reward': self.reward_callback.episode_reward}
 
     def load(self, path):
         return DDPG.load(path)
@@ -41,9 +41,11 @@ class SomeModelToTrain:
 class RewardCallback(BaseCallback):
     def __init__(self, verbose=0):
         super(RewardCallback, self).__init__(verbose)
-        self.mean_reward = -np.Inf
+        self.mean_reward = 0
+        self.episode_reward = 0
 
     def _on_step(self) -> bool:
+        self.episode_reward = self.locals['episode_reward']
         if(len(self.locals['episode_rewards_history']) == 100):
             reward_over_last_100 = np.mean(self.locals['episode_rewards_history'])
             self.mean_reward = reward_over_last_100
