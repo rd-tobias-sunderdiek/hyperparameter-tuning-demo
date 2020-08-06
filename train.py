@@ -34,18 +34,16 @@ class Trainable(tune.Trainable):
 # we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
     space= {
-            "actor_learning_rate": hp.choice("actor_learning_rate", [1e-4, 1e-1]),
-            "critic_learning_rate": hp.choice("critic_learning_rate", [1e-4, 1e-2]),
-            "tau": hp.choice("tau", [0.005, 0.1]),
-            "batch_size": hp.choice("batch_size", [128, 64]),
-            "action_noise_sigma": hp.choice("action_noise_sigma", [0.4, 1.0])
+            "batch_size": hp.choice("batch_size", [128]),
+            "learning_rate": hp.choice("learning_rate", [0.01]),
+            "target_update": hp.choice("target_update", [10]),
             }
 
     hyperopt_search = HyperOptSearch(space, metric="loss", mode="min")
     analysis = tune.run(
         Trainable,
         num_samples = 2,
-        scheduler=ASHAScheduler(metric="loss", mode="min", max_t=2000),
+        scheduler=ASHAScheduler(metric="loss", mode="min", max_t=200),
         search_alg=hyperopt_search,
         local_dir='./ray_results/',
         progress_reporter=reporter,

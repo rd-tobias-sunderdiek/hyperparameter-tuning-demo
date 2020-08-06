@@ -15,17 +15,16 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
-BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 200
-TARGET_UPDATE = 10
 
 class SomeModelToTrain:
 
-    def __init__(self):
+    def __init__(self, hyperparameter):
         super().__init__()
+        self.hyperparameter = hyperparameter
         self.env = gym.make('CartPole-v0').unwrapped
         self.Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
         self.resize = T.Compose([T.ToPILImage(),
@@ -41,7 +40,7 @@ class SomeModelToTrain:
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
-        self.optimizer = optim.RMSprop(self.policy_net.parameters())
+        self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=self.hyperparameter['learning_rate'])
         self.memory = ReplayMemory(10000, self.Transition)
 
         self.steps_done = 0
@@ -90,9 +89,9 @@ class SomeModelToTrain:
 
     def optimize_model(self):
         loss = 100 #todo is that right?
-        if len(self.memory) < BATCH_SIZE:
+        if len(self.memory) < self.hyperparameter['batch_size']:
             return loss
-        transitions = self.memory.sample(BATCH_SIZE)
+        transitions = self.memory.sample(self.hyperparameter['batch_size'])
         batch = self.Transition(*zip(*transitions))
 
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
@@ -105,7 +104,7 @@ class SomeModelToTrain:
 
         state_action_values = self.policy_net(state_batch).gather(1, action_batch)
 
-        next_state_values = torch.zeros(BATCH_SIZE)
+        next_state_values = torch.zeros(self.hyperparameter['batch_size'])
         next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
@@ -150,7 +149,7 @@ class SomeModelToTrain:
                 self.episode_durations.append(t + 1)
                 break
         # Update the target network, copying all weights and biases in DQN
-        if i_episode % TARGET_UPDATE == 0:
+        if i_episode % self.hyperparameter['target_update'] == 0:
             self.target_net.load_state_dict(self.policy_net.state_dict())
 
         return loss
