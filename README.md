@@ -1,6 +1,6 @@
 ### Hyperparametertuning Demo
 
-This is a demo for hyperparameter-tuning with Tune[1] using an DQN example from PyTorch[2] for the OpenAI-Gym environment[3] `MountainCarContinuous`[4].
+This is a demo for hyperparameter-tuning with Tune[1] using an DQN example from Udacity[2] for the OpenAI-Gym environment[3] `MountainCarContinuous`[4].
 
 This demo is meant to be able to be trained on cpu locally (took ~25 min. on a 2.5 GHz Quad-Core i7)
 
@@ -14,19 +14,22 @@ Drive car up the hill and get reward for reaching towards the top. Max. reward i
 
 #### Usage
 - [optional] configure hyperparameter in `train.py`
+- extract hyperparameter
 - `make train` starts training
 - see results in tensorboard via `make tensorboard`
 - after training finished, `make gif` creates a .gif of the best model
 
 #### TODO
+- requirements adjust
+- make gif
 - restore not working
-- change pole to mountain car
+- update readem to lunar lander
 - add tensorboard writer
 - save best model failed to save silently?
 
 [1] https://docs.ray.io/en/latest/tune.html
 
-[2] https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+[2] https://github.com/udacity/deep-reinforcement-learning/tree/master/dqn/solution
 
 [3] https://gym.openai.com/
 

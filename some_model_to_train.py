@@ -1,212 +1,239 @@
-# we got this example from here: https://github.com/pytorch/tutorials/blob/master/intermediate_source/reinforcement_q_learning.py
-# and modified it for our purpose
+# we got this example from here: https://github.com/udacity/deep-reinforcement-learning/tree/master/dqn/solution
 
 import gym
-import math
 import random
-import numpy as np
-from collections import namedtuple
-from itertools import count
-from PIL import Image
-
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torchvision.transforms as T
+import numpy as np
+import random
+from collections import namedtuple, deque
 
-GAMMA = 0.999
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 200
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+BUFFER_SIZE = int(1e5)  # replay buffer size
+BATCH_SIZE = 64         # minibatch size
+GAMMA = 0.99            # discount factor
+TAU = 1e-3              # for soft update of target parameters
+LR = 5e-4               # learning rate 
+UPDATE_EVERY = 4        # how often to update the network
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class SomeModelToTrain:
 
     def __init__(self, hyperparameter):
         super().__init__()
         self.hyperparameter = hyperparameter
-        self.env = gym.make('CartPole-v0').unwrapped
-        self.Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
-        self.resize = T.Compose([T.ToPILImage(),
-                                T.Resize(40, interpolation=Image.CUBIC),
-                                T.ToTensor()])
-        self.env.reset()
-        init_screen = self.get_screen()
-        _, _, screen_height, screen_width = init_screen.shape
-        self.n_actions = self.env.action_space.n
+        self.env = gym.make('LunarLander-v2')
+        self.env.seed(0)
+        self.agent = Agent(state_size=8, action_size=4, seed=0)
+        self.scores = []                        # list containing scores from each episode
+        self.scores_window = deque(maxlen=100)  # last 100 scores
+        eps_start =1.0
+        self.eps = eps_start                   # initialize epsilon
 
-        self.policy_net = DQN(screen_height, screen_width, self.n_actions)
-        self.target_net = DQN(screen_height, screen_width, self.n_actions)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.target_net.eval()
-
-        self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=self.hyperparameter['learning_rate'])
-        self.memory = ReplayMemory(10000, self.Transition)
-
-        self.steps_done = 0
-        self.episode_durations = []
-
-    def get_cart_location(self, screen_width):
-        world_width = self.env.x_threshold * 2
-        scale = screen_width / world_width
-        return int(self.env.state[0] * scale + screen_width / 2.0)  # MIDDLE OF CART
-
-    def get_screen(self):
-        # Returned screen requested by gym is 400x600x3, but is sometimes larger
-        # such as 800x1200x3. Transpose it into torch order (CHW).
-        screen = self.env.render(mode='rgb_array').transpose((2, 0, 1))
-        # Cart is in the lower half, so strip off the top and bottom of the screen
-        _, screen_height, screen_width = screen.shape
-        screen = screen[:, int(screen_height*0.4):int(screen_height * 0.8)]
-        view_width = int(screen_width * 0.6)
-        cart_location = self.get_cart_location(screen_width)
-        if cart_location < view_width // 2:
-            slice_range = slice(view_width)
-        elif cart_location > (screen_width - view_width // 2):
-            slice_range = slice(-view_width, None)
-        else:
-            slice_range = slice(cart_location - view_width // 2,
-                                cart_location + view_width // 2)
-        # Strip off the edges, so that we have a square image centered on a cart
-        screen = screen[:, :, slice_range]
-        # Convert to float, rescale, convert to torch tensor
-        # (this doesn't require a copy)
-        screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
-        screen = torch.from_numpy(screen)
-        # Resize, and add a batch dimension (BCHW)
-        return self.resize(screen).unsqueeze(0)
-    
-    def select_action(self, state):
-        sample = random.random()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-            math.exp(-1. * self.steps_done / EPS_DECAY)
-        self.steps_done += 1
-        if sample > eps_threshold:
-            with torch.no_grad():
-                return self.policy_net(state).max(1)[1].view(1, 1)
-        else:
-            return torch.tensor([[random.randrange(self.n_actions)]], dtype=torch.long)
-
-    def optimize_model(self):
-        loss = 100 #todo is that right?
-        if len(self.memory) < self.hyperparameter['batch_size']:
-            return loss
-        transitions = self.memory.sample(self.hyperparameter['batch_size'])
-        batch = self.Transition(*zip(*transitions))
-
-        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                            batch.next_state)), dtype=torch.bool)
-        non_final_next_states = torch.cat([s for s in batch.next_state
-                                                    if s is not None])
-        state_batch = torch.cat(batch.state)
-        action_batch = torch.cat(batch.action)
-        reward_batch = torch.cat(batch.reward)
-
-        state_action_values = self.policy_net(state_batch).gather(1, action_batch)
-
-        next_state_values = torch.zeros(self.hyperparameter['batch_size'])
-        next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
-        expected_state_action_values = (next_state_values * GAMMA) + reward_batch
-
-        loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
-
-        self.optimizer.zero_grad()
-        loss.backward()
-        for param in self.policy_net.parameters():
-            param.grad.data.clamp_(-1, 1)
-        self.optimizer.step()
-        return loss.item()
-
-    def train_one_episode(self, i_episode):
-        # Initialize the environment and state
-        self.env.reset()
-        last_screen = self.get_screen()
-        current_screen = self.get_screen()
-        state = current_screen - last_screen
-        for t in count():
-            # Select and perform an action
-            action = self.select_action(state)
-            _, reward, done, _ = self.env.step(action.item())
-            reward = torch.tensor([reward])
-
-            # Observe new state
-            last_screen = current_screen
-            current_screen = self.get_screen()
-            if not done:
-                next_state = current_screen - last_screen
-            else:
-                next_state = None
-
-            # Store the transition in memory
-            self.memory.push(state, action, next_state, reward)
-
-            # Move to the next state
-            state = next_state
-
-            # Perform one step of the optimization (on the target network)
-            loss = self.optimize_model()
-            if done:
-                self.episode_durations.append(t + 1)
-                break
-        # Update the target network, copying all weights and biases in DQN
-        if i_episode % self.hyperparameter['target_update'] == 0:
-            self.target_net.load_state_dict(self.policy_net.state_dict())
-
-        return loss
+    def train_one_episode(self):
+        mean_reward = self.dqn(n_episodes=1)
+        return mean_reward
 
     def save(self, path):
-        torch.save({ 'policy_net': self.policy_net, 'target_net': self.target_net }, path)
+        torch.save(self.agent, path)
 
     def load(self, path):
-        saved = torch.load(path)
-        self.policy_net = saved['policy_net']
-        self.target_net = saved['target_net']
+        self.agent = torch.load(path)
 
-class ReplayMemory(object):
+    def dqn(self, n_episodes=2000, max_t=1000, eps_end=0.01, eps_decay=0.995):
+        """Deep Q-Learning.
+        
+        Params
+        ======
+            n_episodes (int): maximum number of training episodes
+            max_t (int): maximum number of timesteps per episode
+            eps_start (float): starting value of epsilon, for epsilon-greedy action selection
+            eps_end (float): minimum value of epsilon
+            eps_decay (float): multiplicative factor (per episode) for decreasing epsilon
+        """
+        
+        for i_episode in range(1, n_episodes+1):
+            state = self.env.reset()
+            score = 0
+            for t in range(max_t):
+                action = self.agent.act(state, self.eps)
+                next_state, reward, done, _ = self.env.step(action)
+                self.agent.step(state, action, reward, next_state, done)
+                state = next_state
+                score += reward
+                if done:
+                    break 
+            self.scores_window.append(score)       # save most recent score
+            self.scores.append(score)              # save most recent score
+            self.eps = max(eps_end, eps_decay*self.eps) # decrease epsilon
+            if np.mean(self.scores_window)>=200.0:
+                torch.save(self.agent.qnetwork_local.state_dict(), 'checkpoint.pth')
+                break
+        return np.mean(self.scores_window)
 
-    def __init__(self, capacity, Transition):
-        self.capacity = capacity
-        self.memory = []
-        self.position = 0
-        self.Transition = Transition
+class Agent():
+    """Interacts with and learns from the environment."""
 
-    def push(self, *args):
-        """Saves a transition."""
-        if len(self.memory) < self.capacity:
-            self.memory.append(None)
-        self.memory[self.position] = self.Transition(*args)
-        self.position = (self.position + 1) % self.capacity
+    def __init__(self, state_size, action_size, seed):
+        """Initialize an Agent object.
+        
+        Params
+        ======
+            state_size (int): dimension of each state
+            action_size (int): dimension of each action
+            seed (int): random seed
+        """
+        self.state_size = state_size
+        self.action_size = action_size
+        self.seed = random.seed(seed)
 
-    def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
+        # Q-Network
+        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
+        self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
+        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
+
+        # Replay memory
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
+        # Initialize time step (for updating every UPDATE_EVERY steps)
+        self.t_step = 0
+    
+    def step(self, state, action, reward, next_state, done):
+        # Save experience in replay memory
+        self.memory.add(state, action, reward, next_state, done)
+        
+        # Learn every UPDATE_EVERY time steps.
+        self.t_step = (self.t_step + 1) % UPDATE_EVERY
+        if self.t_step == 0:
+            # If enough samples are available in memory, get random subset and learn
+            if len(self.memory) > BATCH_SIZE:
+                experiences = self.memory.sample()
+                self.learn(experiences, GAMMA)
+
+    def act(self, state, eps=0.):
+        """Returns actions for given state as per current policy.
+        
+        Params
+        ======
+            state (array_like): current state
+            eps (float): epsilon, for epsilon-greedy action selection
+        """
+        state = torch.from_numpy(state).float().unsqueeze(0).to(device)
+        self.qnetwork_local.eval()
+        with torch.no_grad():
+            action_values = self.qnetwork_local(state)
+        self.qnetwork_local.train()
+
+        # Epsilon-greedy action selection
+        if random.random() > eps:
+            return np.argmax(action_values.cpu().data.numpy())
+        else:
+            return random.choice(np.arange(self.action_size))
+
+    def learn(self, experiences, gamma):
+        """Update value parameters using given batch of experience tuples.
+
+        Params
+        ======
+            experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples 
+            gamma (float): discount factor
+        """
+        states, actions, rewards, next_states, dones = experiences
+
+        # Get max predicted Q values (for next states) from target model
+        Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
+        # Compute Q targets for current states 
+        Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
+
+        # Get expected Q values from local model
+        Q_expected = self.qnetwork_local(states).gather(1, actions)
+
+        # Compute loss
+        loss = F.mse_loss(Q_expected, Q_targets)
+        # Minimize the loss
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        # ------------------- update target network ------------------- #
+        self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)                     
+
+    def soft_update(self, local_model, target_model, tau):
+        """Soft update model parameters.
+        θ_target = τ*θ_local + (1 - τ)*θ_target
+
+        Params
+        ======
+            local_model (PyTorch model): weights will be copied from
+            target_model (PyTorch model): weights will be copied to
+            tau (float): interpolation parameter 
+        """
+        for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+            target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+
+class ReplayBuffer:
+    """Fixed-size buffer to store experience tuples."""
+
+    def __init__(self, action_size, buffer_size, batch_size, seed):
+        """Initialize a ReplayBuffer object.
+
+        Params
+        ======
+            action_size (int): dimension of each action
+            buffer_size (int): maximum size of buffer
+            batch_size (int): size of each training batch
+            seed (int): random seed
+        """
+        self.action_size = action_size
+        self.memory = deque(maxlen=buffer_size)  
+        self.batch_size = batch_size
+        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
+        self.seed = random.seed(seed)
+    
+    def add(self, state, action, reward, next_state, done):
+        """Add a new experience to memory."""
+        e = self.experience(state, action, reward, next_state, done)
+        self.memory.append(e)
+    
+    def sample(self):
+        """Randomly sample a batch of experiences from memory."""
+        experiences = random.sample(self.memory, k=self.batch_size)
+
+        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
+        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
+        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
+        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
+  
+        return (states, actions, rewards, next_states, dones)
 
     def __len__(self):
+        """Return the current size of internal memory."""
         return len(self.memory)
 
-class DQN(nn.Module):
+class QNetwork(nn.Module):
+    """Actor (Policy) Model."""
 
-    def __init__(self, h, w, outputs):
-        super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        self.bn3 = nn.BatchNorm2d(32)
+    def __init__(self, state_size, action_size, seed, fc1_units=64, fc2_units=64):
+        """Initialize parameters and build model.
+        Params
+        ======
+            state_size (int): Dimension of each state
+            action_size (int): Dimension of each action
+            seed (int): Random seed
+            fc1_units (int): Number of nodes in first hidden layer
+            fc2_units (int): Number of nodes in second hidden layer
+        """
+        super(QNetwork, self).__init__()
+        self.seed = torch.manual_seed(seed)
+        self.fc1 = nn.Linear(state_size, fc1_units)
+        self.fc2 = nn.Linear(fc1_units, fc2_units)
+        self.fc3 = nn.Linear(fc2_units, action_size)
 
-        # Number of Linear input connections depends on output of conv2d layers
-        # and therefore the input image size, so compute it.
-        def conv2d_size_out(size, kernel_size = 5, stride = 2):
-            return (size - (kernel_size - 1) - 1) // stride  + 1
-        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
-        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-        linear_input_size = convw * convh * 32
-        self.head = nn.Linear(linear_input_size, outputs)
-
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))
+    def forward(self, state):
+        """Build a network that maps state -> action values."""
+        x = F.relu(self.fc1(state))
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
