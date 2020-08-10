@@ -1,4 +1,5 @@
 # we got this example from here: https://github.com/udacity/deep-reinforcement-learning/tree/master/dqn/solution
+# and modified it
 
 import gym
 import random
@@ -30,7 +31,7 @@ class SomeModelToTrain:
         self.agent = Agent(state_size=8, action_size=4, seed=0)
         self.scores = []                        # list containing scores from each episode
         self.scores_window = deque(maxlen=100)  # last 100 scores
-        eps_start =1.0
+        eps_start = 1.0
         self.eps = eps_start                   # initialize epsilon
 
     def train_one_episode(self):
@@ -38,10 +39,17 @@ class SomeModelToTrain:
         return mean_reward
 
     def save(self, path):
-        torch.save(self.agent, path)
+        dict = {'scores': self.scores, 'scores_window': self.scores_window, 'eps': self.eps}
+        agent_dict = self.agent.get_dict_to_save()
+        dict.update(agent_dict)
+        torch.save(dict, path)
 
     def load(self, path):
-        self.agent = torch.load(path)
+        dict = torch.load(path)
+        self.agent.load(dict)
+        self.scores = dict['scores']
+        self.scores_window = dict['scores_window']
+        self.eps = dict['eps']
 
     def dqn(self, n_episodes=2000, max_t=1000, eps_end=0.01, eps_decay=0.995):
         """Deep Q-Learning.
@@ -70,7 +78,6 @@ class SomeModelToTrain:
             self.scores.append(score)              # save most recent score
             self.eps = max(eps_end, eps_decay*self.eps) # decrease epsilon
             if np.mean(self.scores_window)>=200.0:
-                torch.save(self.agent.qnetwork_local.state_dict(), 'checkpoint.pth')
                 break
         return np.mean(self.scores_window)
 
@@ -99,6 +106,16 @@ class Agent():
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.t_step = 0
+    
+    def get_dict_to_save(self):
+        return {'qnetwork_local': self.qnetwork_local.state_dict(),
+                'qnetwork_target': self.qnetwork_target.state_dict(),
+                'optimizer': self.optimizer.state_dict()}
+
+    def load(self, dict):
+        self.qnetwork_local.load_state_dict(dict['qnetwork_local'])
+        self.qnetwork_target.load_state_dict(dict['qnetwork_target'])
+        self.optimizer.load_state_dict(dict['optimizer'])
     
     def step(self, state, action, reward, next_state, done):
         # Save experience in replay memory

@@ -20,7 +20,6 @@ Drive car up the hill and get reward for reaching towards the top. Max. reward i
 - after training finished, `make gif` creates a .gif of the best model
 
 #### TODO
-- save best model failed to save silently?
 - requirements adjust
 - make gif
 - restore not working

@@ -8,28 +8,28 @@ from ray.tune import CLIReporter
 
 from some_model_to_train import SomeModelToTrain
 
-MODEL_FILENAME = "saved_model"
-MODEL_SAVED_IN_PATH_TXT = 'best_model_saved_in_path.txt'
+MODEL_FILENAME = "checkpoint.pth"
+TUNE_RESULTS_FOLDER = './ray_results/'
 
 reporter = CLIReporter(max_progress_rows=10)
 reporter.add_metric_column("mean_reward")
 
 class Trainable(tune.Trainable):
     def _setup(self, hyperparameter):
-        self.model = SomeModelToTrain(hyperparameter)
+        self.someModelToTrain = SomeModelToTrain(hyperparameter)
 
     def _train(self):
-        mean_reward = self.model.train_one_episode()
+        mean_reward = self.someModelToTrain.train_one_episode()
         return {'mean_reward': mean_reward}
 
     def _save(self, tmp_checkpoint_dir):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
-        self.model.save(checkpoint_path)
+        self.someModelToTrain.save(checkpoint_path)
         return tmp_checkpoint_dir
 
     def _restore(self, tmp_checkpoint_dir):
         checkpoint_path = os.path.join(tmp_checkpoint_dir, MODEL_FILENAME)
-        self.model = self.model.load(checkpoint_path)
+        self.someModelToTrain.load(checkpoint_path)
 
 # we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
@@ -42,19 +42,14 @@ def main():
     hyperopt_search = HyperOptSearch(space, metric="mean_reward", mode="max")
     analysis = tune.run(
         Trainable,
-        stop= {'training_iteration': 20},
-        num_samples = 2,
+        stop= {'training_iteration': 250},
+        num_samples = 13,
         scheduler=MedianStoppingRule(metric="mean_reward", mode="max"),
         search_alg=hyperopt_search,
-        local_dir='./ray_results/',
+        local_dir=TUNE_RESULTS_FOLDER,
         progress_reporter=reporter,
-        checkpoint_at_end=False
+        checkpoint_at_end=True
     )
-    print("Best hyperparameter {}".format(analysis.get_best_config(metric="mean_reward", mode="max")))
-    best_model_path = analysis.get_best_logdir(metric="mean_reward", mode="max")
-    print("Best model stored in {}".format(best_model_path))
-    with open(MODEL_SAVED_IN_PATH_TXT, 'w') as file:
-        file.write(best_model_path)
 
 if __name__ == "__main__":
     main()
