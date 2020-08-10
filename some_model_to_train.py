@@ -13,11 +13,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64         # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR = 5e-4               # learning rate 
-UPDATE_EVERY = 4        # how often to update the network
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -28,7 +25,7 @@ class SomeModelToTrain:
         self.hyperparameter = hyperparameter
         self.env = gym.make('LunarLander-v2')
         self.env.seed(0)
-        self.agent = Agent(state_size=8, action_size=4, seed=0)
+        self.agent = Agent(state_size=8, action_size=4, seed=0, hyperparameter=self.hyperparameter)
         self.scores = []                        # list containing scores from each episode
         self.scores_window = deque(maxlen=100)  # last 100 scores
         eps_start = 1.0
@@ -84,7 +81,7 @@ class SomeModelToTrain:
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed):
+    def __init__(self, state_size, action_size, seed, hyperparameter):
         """Initialize an Agent object.
         
         Params
@@ -96,14 +93,15 @@ class Agent():
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
+        self.hyperparameter = hyperparameter
 
         # Q-Network
         self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
-        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
+        self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=hyperparameter['learning_rate'])
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, hyperparameter['batch_size'], seed)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.t_step = 0
     
@@ -122,10 +120,10 @@ class Agent():
         self.memory.add(state, action, reward, next_state, done)
         
         # Learn every UPDATE_EVERY time steps.
-        self.t_step = (self.t_step + 1) % UPDATE_EVERY
+        self.t_step = (self.t_step + 1) % self.hyperparameter['target_update']
         if self.t_step == 0:
             # If enough samples are available in memory, get random subset and learn
-            if len(self.memory) > BATCH_SIZE:
+            if len(self.memory) > self.hyperparameter['batch_size']:
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA)
 
