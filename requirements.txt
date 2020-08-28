@@ -1,7 +1,7 @@
 numpy
 torch
 torchvision
-ray[tune]==0.8.6
+ray[tune]==0.8.7
 requests
 gym
 imageio
