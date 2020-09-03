@@ -11,6 +11,7 @@ Land on the moon and get reward for landing properly, loose reward for using fue
 
 #### Install
 - `make install` (tested with python 3.8)
+- install ray version 0.9.0-dev0 for your OS like described in [5]
 
 #### Usage
 - [optional] configure hyperparameter in `train.py`
@@ -28,3 +29,5 @@ Land on the moon and get reward for landing properly, loose reward for using fue
 [3] https://gym.openai.com/
 
 [4] https://gym.openai.com/envs/LunarLander-v2/
+
+[5] https://docs.ray.io/en/latest/installation.html
