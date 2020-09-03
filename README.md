@@ -14,6 +14,7 @@ Land on the moon and get reward for landing properly, loose reward for using fue
 - install ray version 0.9.0-dev0 for your OS like described in [5]
 
 #### Usage
+- watch random, untrained agent via `make random`
 - [optional] configure hyperparameter in `train.py`
 - `make train` starts training
 - see results in tensorboard via `make tensorboard`
