@@ -110,3 +110,8 @@ ASHA uses free resources for new **rung's**
 ## Population Based Training, PBT
 
 ![dynamic hyperparameters](assets/dynamic_hyperparameters.png)
+
+In bigger models and training sets we need to change hyperparameters, learning rate in the above figure, during training. This is a big problem in computer vision or NLP.
+In Reinforcement Learning, CV and NLP are non-stationary during training.
+
+![pbt](assets/pbt_vs_other.png)
