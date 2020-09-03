@@ -98,10 +98,15 @@ while trial.iter < max_epochs:
             trial.stop()
 ```
 
-**rung** are sets of trials that are started within a resource block of workers
-The standard HyperBand uses the resources as follows
+**rung** are sets of trials that are started within a resource block of workers.
+
+The standard HyperBand uses the resources as follows:
 
 ![adaptive selection](assets/animated_seq.gif)
 
-
+ASHA uses free resources for new **rung's**
 ![adaptive selection](assets/animated_cont.gif)
+
+## Population Based Training, PBT
+
+![dynamic hyperparameters](assets/dynamic_hyperparameters.png)
