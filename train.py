@@ -35,7 +35,7 @@ class Trainable(tune.Trainable):
 # we got configuration of this from example given in: https://docs.ray.io/en/master/tune/tutorials/tune-tutorial.html
 def main():
     space= {
-            "batch_size": hp.choice("batch_size", [64, 128, 256]),
+            "batch_size": hp.choice("batch_size", [32, 64, 128]),
             "learning_rate": hp.choice("learning_rate", [0.01, 0.001, 0.0005]),
             "target_update": hp.choice("target_update", [4, 10, 100]),
             }
