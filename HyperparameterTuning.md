@@ -75,3 +75,33 @@ space= {
 ```
 
 ![Grid vs Random Search](assets/grid_vs_random.jpeg)
+
+Also in high dimensinal spaces the random search outperformce most other methods.
+Still these simple parallel methods are inefficient and expansive
+
+## Adaptive Selection Methods
+
+![adaptive selection](assets/heatmap.001-min.jpeg)
+
+### HyperBand(SHA) / ASHA
+
+HyperBand and Asynchronous HyperBand, ASHA, are early stopping methods.
+
+```python
+trial = sample_from(space)
+while trial.iter < max_epochs:
+    tiral.run_epoch()
+    if trial.early_stop():
+        if is_top_performer(trial, trial.iter):
+            trial.extend_early_stop()
+        else:
+            trial.stop()
+```
+
+**rung** are sets of trials that are started within a resource block of workers
+The standard HyperBand uses the resources as follows
+
+![adaptive selection](assets/animated_seq.gif)
+
+
+![adaptive selection](assets/animated_cont.gif)
