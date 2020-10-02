@@ -11,7 +11,6 @@ Land on the moon and get reward for landing properly, loose reward for using fue
 
 #### Install
 - `make install` (tested with python 3.8)
-- install ray version 0.9.0-dev0 for your OS like described in [5]
 
 #### Usage
 - watch random, untrained agent via `make random`
@@ -20,9 +19,6 @@ Land on the moon and get reward for landing properly, loose reward for using fue
 - see results in tensorboard via `make tensorboard`
 - after training finished, `make gif` creates a .gif of the best model
 
-#### TODO
-- 0.9.0-dev0
-
 [1] https://docs.ray.io/en/latest/tune.html
 
 [2] https://github.com/udacity/deep-reinforcement-learning/tree/master/dqn/solution
@@ -30,5 +26,3 @@ Land on the moon and get reward for landing properly, loose reward for using fue
 [3] https://gym.openai.com/
 
 [4] https://gym.openai.com/envs/LunarLander-v2/
-
-[5] https://docs.ray.io/en/latest/installation.html
